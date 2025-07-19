@@ -64,7 +64,7 @@ function AppContent() {
   };
 
   const handleSwitchToDashboard = () => {
-    setViewMode('dashboard');
+    setViewMode('home');
   };
   
   const handleClosePasswordResetModal = () => {
@@ -89,7 +89,12 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex flex-col">
-      <Header />
+      <Header 
+        onOpenAuthModal={handleOpenAuthModal}
+        onOpenRegistrationModal={handleOpenRegistrationModal}
+        onSwitchToProfile={handleSwitchToProfile}
+        onSwitchToDashboard={handleSwitchToDashboard}
+      />
       <main className="flex-grow container mx-auto px-4 py-4 sm:py-8">
         {viewMode === 'home' && (
           <div className="space-y-6 sm:space-y-8">
