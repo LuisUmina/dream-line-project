@@ -42,11 +42,11 @@ class AgentConfig(BaseModel):
 
 class Question(BaseModel):
     id: str
-    type: Literal['multiple_choice', 'code_completion', 'debugging']
+    type: Literal['multiple_choice', 'code_completion', 'debugging', 'text_question']
     question: str
-    options: List[str]
-    correctAnswer: int  # Index of the correct answer in options array
-    explanation: str
+    options: Optional[List[str]] = None  # Not needed for text_question
+    correctAnswer: Optional[int] = None  # Not needed for text_question
+    explanation: Optional[str] = None  # Not needed for text_question
     difficulty: Literal['beginner', 'intermediate', 'advanced']
     topic: str
     xp: int
@@ -56,3 +56,20 @@ class QuestionRequest(BaseModel):
     topic: str
     num_questions: int = Field(default=5, ge=1, le=20)
     difficulty: Optional[Literal['beginner', 'intermediate', 'advanced']] = None
+
+
+class AnswerValidationRequest(BaseModel):
+    agent_id: str
+    question_id: str
+    question: str
+    user_answer: str
+    difficulty: Literal['beginner', 'intermediate', 'advanced']
+
+
+class AnswerValidationResponse(BaseModel):
+    is_successful: bool  # True if >= 75% points achieved
+    points_earned: int   # Points earned out of maximum possible
+    max_points: int      # Maximum points possible for this question
+    percentage: float    # Percentage of points earned (0-100)
+    feedback: str        # Detailed feedback on the answer
+    correct_answer: Optional[str] = None  # Provided if answer was incorrect

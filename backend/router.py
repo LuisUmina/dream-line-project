@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Body, HTTPException
 from typing import List
-from models import AgentConfig, Question, QuestionRequest
+from models import AgentConfig, Question, QuestionRequest, AnswerValidationRequest, AnswerValidationResponse
 from agent_service import create_agent_from_docs, get_agent_response
 from question_service import generate_questions
+from answer_validation_service import validate_answer
 
 router = APIRouter()
 
@@ -63,3 +64,42 @@ async def generate_questions_endpoint(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating questions: {str(e)}")
+
+
+@router.post("/agent/{agent_id}/validate-answer/", response_model=AnswerValidationResponse)
+async def validate_answer_endpoint(
+    agent_id: str,
+    question_id: str = Body(...),
+    question: str = Body(...),
+    user_answer: str = Body(...),
+    difficulty: str = Body(...)
+):
+    """
+    Validates a user's answer to a question using the agent's knowledge.
+    
+    Args:
+        agent_id: The ID of the agent whose knowledge to use for validation
+        question_id: The ID of the question being answered
+        question: The text of the question
+        user_answer: The user's answer to validate
+        difficulty: The difficulty level of the question ('beginner', 'intermediate', 'advanced')
+    
+    Returns:
+        Validation result with points, feedback, and success status
+    """
+    if difficulty not in ['beginner', 'intermediate', 'advanced']:
+        raise HTTPException(status_code=400, detail="Difficulty must be 'beginner', 'intermediate', or 'advanced'.")
+    
+    if not user_answer.strip():
+        raise HTTPException(status_code=400, detail="User answer cannot be empty.")
+    
+    if not question.strip():
+        raise HTTPException(status_code=400, detail="Question cannot be empty.")
+    
+    try:
+        validation_result = await validate_answer(agent_id, question_id, question, user_answer, difficulty)
+        return validation_result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error validating answer: {str(e)}")
