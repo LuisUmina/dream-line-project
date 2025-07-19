@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AppProvider } from './context/AppContext';
 import { Header } from './components/Header';
-import { TopicInput } from './components/TopicInput';
 import { SkillTree } from './components/SkillTree';
 import { Lesson } from './components/Lesson';
 import { Quiz } from './components/Quiz';
@@ -10,13 +9,20 @@ import { useAppContext } from './context/AppContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Toaster } from '@/components/ui/toaster';
+import { AuthenticationModal } from './components/AuthenticationModal';
+import { RegistrationModal } from './components/RegistrationModal';
+import { PasswordResetModal } from './components/PasswordResetModal';
+import { GeminiQuizGenerator } from './components/GeminiQuizGenerator';
 
-type ViewMode = 'home' | 'lesson' | 'quiz';
+type ViewMode = 'home' | 'lesson' | 'quiz' | 'dashboard';
 
 function AppContent() {
   const { state } = useAppContext();
   const [viewMode, setViewMode] = useState<ViewMode>('home');
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  const [isRegistrationModalOpen, setRegistrationModalOpen] = useState(false);
+  const [isPasswordResetModalOpen, setPasswordResetModalOpen] = useState(false);
 
   const handleStartLesson = (lessonId: string) => {
     setSelectedLessonId(lessonId);
@@ -32,6 +38,30 @@ function AppContent() {
     setSelectedLessonId(null);
   };
 
+  const handleOpenAuthModal = () => {
+    setAuthModalOpen(true);
+  };
+
+  const handleOpenRegistrationModal = () => {
+    setRegistrationModalOpen(true);
+  };
+
+  const handleCloseAuthModal = () => {
+    setAuthModalOpen(false);
+  };
+
+  const handleCloseRegistrationModal = () => {
+    setRegistrationModalOpen(false);
+  };
+  
+  const handleOpenPasswordResetModal = () => {
+    setPasswordResetModalOpen(true);
+  };
+  
+  const handleClosePasswordResetModal = () => {
+    setPasswordResetModalOpen(false);
+  };
+
   // Mostrar quiz si hay una sesión activa
   if (state.currentQuizSession && viewMode !== 'quiz') {
     setViewMode('quiz');
@@ -42,11 +72,15 @@ function AppContent() {
     setViewMode('home');
   }
 
+  if (viewMode === 'dashboard' && !state.user) {
+    handleOpenAuthModal();
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex flex-col">
       <Header />
-      
-      <main className="container mx-auto px-4 py-4 sm:py-8">
+      <main className="flex-grow container mx-auto px-4 py-4 sm:py-8">
         {viewMode === 'home' && (
           <div className="space-y-6 sm:space-y-8">
             {/* Hero Section */}
@@ -60,14 +94,18 @@ function AppContent() {
             </div>
 
             <Tabs defaultValue="lessons" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8">
+              <TabsList className="grid w-full grid-cols-3 gap-4 mb-6 sm:mb-8">
                 <TabsTrigger value="lessons" className="text-sm sm:text-base lg:text-lg">
                   📚 Lecciones
                 </TabsTrigger>
                 <TabsTrigger value="ai-quiz" className="text-sm sm:text-base lg:text-lg">
                   🤖 Quiz con IA
                 </TabsTrigger>
-                <TabsTrigger value="dashboard" className="text-sm sm:text-base lg:text-lg">
+                <TabsTrigger value="dashboard" className="text-sm sm:text-base lg:text-lg" onClick={() => {
+                  if (!state.user) {
+                    handleOpenAuthModal();
+                  }
+                }}>
                   📊 Panel
                 </TabsTrigger>
               </TabsList>
@@ -85,8 +123,8 @@ function AppContent() {
                     Escribe cualquier tema de programación y nuestra IA creará un quiz personalizado
                   </p>
                 </div>
-                <TopicInput />
-                
+                <GeminiQuizGenerator />
+
                 {/* Ejemplos de temas */}
                 <Card className="bg-white/50 border-dashed">
                   <CardContent className="p-6">
@@ -133,6 +171,23 @@ function AppContent() {
 
         {viewMode === 'quiz' && <Quiz />}
       </main>
+
+      <AuthenticationModal 
+        isOpen={isAuthModalOpen} 
+        onClose={handleCloseAuthModal}
+        onSwitchToRegister={handleOpenRegistrationModal}
+        onForgotPassword={handleOpenPasswordResetModal}
+      />
+      <RegistrationModal 
+        isOpen={isRegistrationModalOpen} 
+        onClose={handleCloseRegistrationModal}
+        onSwitchToLogin={handleOpenAuthModal}
+      />
+      <PasswordResetModal 
+        isOpen={isPasswordResetModalOpen} 
+        onClose={handleClosePasswordResetModal}
+        onSwitchToLogin={handleOpenAuthModal}
+      />
 
       <Toaster />
     </div>

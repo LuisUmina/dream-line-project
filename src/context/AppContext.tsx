@@ -1,15 +1,18 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { User, Question, QuizSession, Lesson } from '../types';
+import { getCurrentSession, getUserProfile } from '../services/auth';
+import { toast } from '@/hooks/use-toast';
 
 interface AppState {
   user: User | null;
   currentQuizSession: QuizSession | null;
   isLoading: boolean;
   error: string | null;
+  isAuthenticated: boolean;
 }
 
 type AppAction =
-  | { type: 'SET_USER'; payload: User }
+  | { type: 'SET_USER'; payload: User | null }
   | { type: 'UPDATE_XP'; payload: number }
   | { type: 'UPDATE_STREAK'; payload: number }
   | { type: 'COMPLETE_LESSON'; payload: string }
@@ -17,19 +20,21 @@ type AppAction =
   | { type: 'UPDATE_QUIZ'; payload: Partial<QuizSession> }
   | { type: 'END_QUIZ' }
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null };
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_AUTHENTICATED'; payload: boolean };
 
 const initialState: AppState = {
   user: null,
   currentQuizSession: null,
   isLoading: false,
   error: null,
+  isAuthenticated: false,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'SET_USER':
-      return { ...state, user: action.payload };
+      return { ...state, user: action.payload, isAuthenticated: action.payload !== null };
     case 'UPDATE_XP':
       return {
         ...state,
@@ -65,6 +70,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, isLoading: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload };
+    case 'SET_AUTHENTICATED':
+      return { ...state, isAuthenticated: action.payload };
     default:
       return state;
   }
@@ -78,6 +85,9 @@ interface AppContextType {
   startQuizSession: (topic: string, questions: Question[]) => void;
   updateQuizSession: (updates: Partial<QuizSession>) => void;
   endQuizSession: () => void;
+  setUser: (user: User | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -85,30 +95,46 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Mock user for demo
+  // Check for existing session on mount
   useEffect(() => {
-    const mockUser: User = {
-      id: '1',
-      email: 'usuario@ejemplo.com',
-      name: 'Estudiante',
-      xp: 1250,
-      level: 3,
-      streak: 7,
-      lastActiveDate: new Date().toISOString(),
-      completedLessons: ['variables-basics', 'data-types'],
-      badges: [
-        {
-          id: 'first-lesson',
-          name: 'Primer Paso',
-          description: 'Completaste tu primera lección',
-          icon: '🎉',
-          earnedAt: new Date().toISOString(),
-        },
-      ],
-      createdAt: new Date().toISOString(),
+    const checkSession = async () => {
+      setLoading(true);
+      try {
+        const session = await getCurrentSession();
+        if (session?.user) {
+          const { user, error } = await getUserProfile(session.user.id);
+          if (user) {
+            setUser(user);
+          } else if (error) {
+            toast({
+              title: "Error",
+              description: error,
+              variant: "destructive",
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+      } finally {
+        setLoading(false);
+      }
     };
-    dispatch({ type: 'SET_USER', payload: mockUser });
+    
+    checkSession();
   }, []);
+
+  // Helper functions
+  const setUser = (user: User | null) => {
+    dispatch({ type: 'SET_USER', payload: user });
+  };
+  
+  const setLoading = (isLoading: boolean) => {
+    dispatch({ type: 'SET_LOADING', payload: isLoading });
+  };
+  
+  const setError = (error: string | null) => {
+    dispatch({ type: 'SET_ERROR', payload: error });
+  };
 
   const updateUserXP = (xp: number) => {
     dispatch({ type: 'UPDATE_XP', payload: xp });
@@ -149,6 +175,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         startQuizSession,
         updateQuizSession,
         endQuizSession,
+        setUser,
+        setLoading,
+        setError
       }}
     >
       {children}

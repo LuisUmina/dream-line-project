@@ -125,26 +125,87 @@ export function Quiz() {
         </CardHeader>
         
         <CardContent>
-          <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-gray-800">
+          <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-gray-800 leading-relaxed">
             {currentQuestion.question}
           </h3>
 
           {!showFeedback ? (
             <div className="space-y-4">
               {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
-                <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer}>
+                <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer} className="space-y-3">
                   {currentQuestion.options.map((option, index) => (
-                    <div key={index} className="flex items-start space-x-2">
-                      <RadioGroupItem value={option} id={`option-${index}`} />
+                    <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-300 bg-white shadow-md hover:border-blue-500 hover:bg-blue-100 transition-colors">
+                      <RadioGroupItem value={option} id={`option-${index}`} className="h-5 w-5" />
                       <Label 
                         htmlFor={`option-${index}`}
-                        className="text-sm sm:text-lg cursor-pointer hover:text-blue-600 transition-colors flex-1 p-2 sm:p-3 rounded border hover:border-blue-300"
+                        className="text-sm sm:text-base cursor-pointer flex-1 text-gray-700"
                       >
                         {option}
                       </Label>
                     </div>
                   ))}
                 </RadioGroup>
+              )}
+
+              {currentQuestion.type === 'code_completion' && currentQuestion.options && (
+                <div className="space-y-3">
+                  <div className="rounded-md overflow-hidden border border-gray-200">
+                    <div className="bg-[#1e1e1e] text-gray-300 text-xs px-4 py-1 flex items-center justify-between border-b border-gray-700">
+                      <span>code-editor.js</span>
+                      <div className="flex space-x-1">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      </div>
+                    </div>
+                    <div className="bg-[#1e1e1e] p-4 text-sm sm:text-base font-mono overflow-x-auto">
+                      <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer} className="space-y-4">
+                        {currentQuestion.options.map((option, index) => (
+                          <div key={index} className="flex items-start space-x-3">
+                            <RadioGroupItem value={option} id={`option-${index}`} className="h-5 w-5 mt-1 bg-gray-800 border-gray-600" />
+                            <Label 
+                              htmlFor={`option-${index}`}
+                              className="cursor-pointer flex-1 whitespace-pre text-[#d4d4d4] leading-relaxed"
+                            >
+                              {option}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {currentQuestion.type === 'debugging' && currentQuestion.options && (
+                <div className="space-y-3">
+                  <div className="rounded-md overflow-hidden border border-gray-200 mb-4">
+                    <div className="bg-[#1e1e1e] text-gray-300 text-xs px-4 py-1 flex items-center justify-between border-b border-gray-700">
+                      <span>debug-code.js</span>
+                      <div className="flex space-x-1">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      </div>
+                    </div>
+                    <div className="bg-[#1e1e1e] p-4 text-sm sm:text-base font-mono overflow-x-auto">
+                      <pre className="text-[#d4d4d4] whitespace-pre-wrap">{currentQuestion.question.split("Encuentra el error en este código:")[1]?.trim() || "// Código con error a depurar"}</pre>
+                    </div>
+                  </div>
+                  <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer} className="space-y-3 mt-4">
+                    {currentQuestion.options.map((option, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-300 bg-white shadow-md hover:border-blue-500 hover:bg-blue-100 transition-colors">
+                        <RadioGroupItem value={option} id={`option-${index}`} className="h-5 w-5" />
+                        <Label 
+                          htmlFor={`option-${index}`}
+                          className="text-sm sm:text-base cursor-pointer flex-1 text-gray-700"
+                        >
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
               )}
 
               <div className="flex justify-center sm:justify-end pt-4">
