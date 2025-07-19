@@ -1,6 +1,6 @@
 import motor.motor_asyncio
 from pymongo.server_api import ServerApi
-from .config import settings
+from config import settings
 
 client = motor.motor_asyncio.AsyncIOMotorClient(
     settings.MONGODB_URI,
