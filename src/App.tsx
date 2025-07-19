@@ -5,6 +5,7 @@ import { SkillTree } from './components/SkillTree';
 import { Lesson } from './components/Lesson';
 import { Quiz } from './components/Quiz';
 import { Dashboard } from './components/Dashboard';
+import { Profile } from './components/Profile';
 import { useAppContext } from './context/AppContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import { RegistrationModal } from './components/RegistrationModal';
 import { PasswordResetModal } from './components/PasswordResetModal';
 import { GeminiQuizGenerator } from './components/GeminiQuizGenerator';
 
-type ViewMode = 'home' | 'lesson' | 'quiz' | 'dashboard';
+type ViewMode = 'home' | 'lesson' | 'quiz' | 'dashboard' | 'profile';
 
 function AppContent() {
   const { state } = useAppContext();
@@ -57,6 +58,14 @@ function AppContent() {
   const handleOpenPasswordResetModal = () => {
     setPasswordResetModalOpen(true);
   };
+
+  const handleSwitchToProfile = () => {
+    setViewMode('profile');
+  };
+
+  const handleSwitchToDashboard = () => {
+    setViewMode('dashboard');
+  };
   
   const handleClosePasswordResetModal = () => {
     setPasswordResetModalOpen(false);
@@ -72,7 +81,8 @@ function AppContent() {
     setViewMode('home');
   }
 
-  if (viewMode === 'dashboard' && !state.user) {
+  // Authentication guards for protected views
+  if ((viewMode === 'dashboard' || viewMode === 'profile') && !state.user) {
     handleOpenAuthModal();
     return null;
   }
@@ -170,6 +180,10 @@ function AppContent() {
         )}
 
         {viewMode === 'quiz' && <Quiz />}
+        
+        {viewMode === 'profile' && <Profile />}
+        
+        {viewMode === 'dashboard' && <Dashboard />}
       </main>
 
       <AuthenticationModal 
@@ -177,11 +191,13 @@ function AppContent() {
         onClose={handleCloseAuthModal}
         onSwitchToRegister={handleOpenRegistrationModal}
         onForgotPassword={handleOpenPasswordResetModal}
+        onSwitchToDashboard={handleSwitchToProfile}
       />
       <RegistrationModal 
         isOpen={isRegistrationModalOpen} 
         onClose={handleCloseRegistrationModal}
         onSwitchToLogin={handleOpenAuthModal}
+        onSwitchToDashboard={handleSwitchToProfile}
       />
       <PasswordResetModal 
         isOpen={isPasswordResetModalOpen} 

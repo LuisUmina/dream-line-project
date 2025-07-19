@@ -11,12 +11,14 @@ export function AuthenticationModal({
   isOpen, 
   onClose, 
   onSwitchToRegister,
-  onForgotPassword
+  onForgotPassword,
+  onSwitchToDashboard
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   onSwitchToRegister: () => void;
   onForgotPassword: () => void;
+  onSwitchToDashboard: () => void;
 }) {
   const { setUser } = useAppContext();
   const [formData, setFormData] = useState({
@@ -61,6 +63,7 @@ export function AuthenticationModal({
         description: `Bienvenido de vuelta, ${user.name}`,
       });
       onClose();
+      onSwitchToDashboard(); // Redirect to dashboard
     } catch (err) {
       console.error('Login error:', err);
       setError('Error inesperado. Inténtalo de nuevo.');
@@ -100,7 +103,7 @@ export function AuthenticationModal({
                   onClose();
                   onForgotPassword();
                 }}
-                className="text-xs text-blue-600 hover:text-blue-700"
+                className="text-sm text-blue-600 hover:text-blue-700 underline"
               >
                 ¿Olvidaste tu contraseña?
               </button>
@@ -137,10 +140,17 @@ export function AuthenticationModal({
           </p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="bg-white text-black border-gray-300 hover:bg-gray-50"
+          >
+            Cancelar
+          </Button>
           <Button 
             onClick={handleSubmit}
             disabled={isSubmitting}
+            className="bg-white text-black border border-gray-300 hover:bg-gray-50"
           >
             {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </Button>

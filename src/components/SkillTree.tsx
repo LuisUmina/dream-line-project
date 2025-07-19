@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +15,7 @@ export function SkillTree({ onStartLesson }: SkillTreeProps) {
   const user = state.user;
 
   const getLessonStatus = (lesson: any) => {
-    if (!user) return 'locked';
+    if (!user || !user.completedLessons) return 'locked';
     
     if (user.completedLessons.includes(lesson.id)) {
       return 'completed';
@@ -30,7 +29,7 @@ export function SkillTree({ onStartLesson }: SkillTreeProps) {
   };
 
   const getSectionProgress = (section: any) => {
-    if (!user) return 0;
+    if (!user || !user.completedLessons) return 0;
     const completedCount = section.lessons.filter((lesson: any) =>
       user.completedLessons.includes(lesson.id)
     ).length;
@@ -66,7 +65,7 @@ export function SkillTree({ onStartLesson }: SkillTreeProps) {
             
             <CardContent className="pt-6">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {section.lessons.map((lesson, index) => {
+                {section.lessons.map((lesson) => {
                   const status = getLessonStatus(lesson);
                   
                   return (
