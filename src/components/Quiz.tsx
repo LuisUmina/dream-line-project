@@ -37,7 +37,7 @@ export function Quiz() {
 
     setIsSubmitting(true);
     try {
-      const result = await submitAnswer(currentQuestion.id, selectedAnswer);
+      const result = await submitAnswer(currentQuestion.id, selectedAnswer, currentQuestion.correctAnswer);
       setFeedback(result);
       setShowFeedback(true);
       

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, Book, Code, ListChecks, FileText, Upload } from 'lucide-react';
+import { Sparkles, Loader2, FileText, Upload } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { generateQuestionsWithGemini, extractTextFromFile } from '../utils/api';
 import { toast } from '@/hooks/use-toast';
@@ -52,6 +52,15 @@ export function GeminiQuizGenerator() {
       return;
     }
 
+    if (!content) {
+      toast({
+        title: "Error",
+        description: "El documento de referencia es obligatorio para generar preguntas con IA.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const questions = await generateQuestionsWithGemini(topic, content);
@@ -61,12 +70,12 @@ export function GeminiQuizGenerator() {
       setFileName(null);
       toast({
         title: "¡Quiz generado!",
-        description: `Se crearon ${questions.length} preguntas sobre ${topic} con Gemini AI.`,
+        description: `Se crearon ${questions.length} preguntas sobre ${topic} con IA.`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo generar el quiz. Inténtalo de nuevo.",
+        description: error instanceof Error ? error.message : "No se pudo generar el quiz. Inténtalo de nuevo.",
         variant: "destructive",
       });
     } finally {
@@ -82,7 +91,7 @@ export function GeminiQuizGenerator() {
           <span>Generador de Quiz con Gemini AI</span>
         </CardTitle>
         <p className="text-gray-600 text-sm sm:text-base px-2">
-          Gemini analizará documentos PDF, TXT o Word para generar preguntas personalizadas sobre el tema elegido
+          La IA analizará documentos PDF, TXT o Word para generar preguntas personalizadas sobre el tema elegido. El documento es obligatorio.
         </p>
       </CardHeader>
       
@@ -103,7 +112,7 @@ export function GeminiQuizGenerator() {
         
         <div className="space-y-2">
           <label htmlFor="document" className="text-sm font-medium text-gray-700">
-            Documento de referencia (opcional)
+            Documento de referencia (obligatorio)
           </label>
           <div className="flex flex-col space-y-2">
             <div className="flex items-center justify-center w-full">
@@ -170,7 +179,7 @@ export function GeminiQuizGenerator() {
           
           <Button 
             onClick={handleGenerate}
-            disabled={isGenerating || !topic.trim()}
+            disabled={isGenerating || !topic.trim() || !content}
             className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 px-6 sm:px-8 w-full sm:w-auto"
           >
             {isGenerating ? (
@@ -181,7 +190,7 @@ export function GeminiQuizGenerator() {
             ) : (
               <>
                 <Sparkles className="h-4 w-4 mr-2" />
-                Generar Quiz con Gemini
+                Generar Quiz con IA
               </>
             )}
           </Button>
