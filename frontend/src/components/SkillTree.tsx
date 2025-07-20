@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,12 +17,14 @@ export function SkillTree({ onStartLesson }: SkillTreeProps) {
   const getLessonStatus = (lesson: any) => {
     if (!user) return 'locked';
     
-    if (user.completedLessons.includes(lesson.id)) {
+    const completedLessons = user.completedLessons || [];
+    
+    if (completedLessons.includes(lesson.id)) {
       return 'completed';
     }
     
     const hasPrerequisites = lesson.prerequisites.every((prereq: string) =>
-      user.completedLessons.includes(prereq)
+      completedLessons.includes(prereq)
     );
     
     return hasPrerequisites ? 'available' : 'locked';
@@ -31,8 +32,10 @@ export function SkillTree({ onStartLesson }: SkillTreeProps) {
 
   const getSectionProgress = (section: any) => {
     if (!user) return 0;
+    
+    const completedLessons = user.completedLessons || [];
     const completedCount = section.lessons.filter((lesson: any) =>
-      user.completedLessons.includes(lesson.id)
+      completedLessons.includes(lesson.id)
     ).length;
     return (completedCount / section.lessons.length) * 100;
   };
@@ -66,7 +69,7 @@ export function SkillTree({ onStartLesson }: SkillTreeProps) {
             
             <CardContent className="pt-6">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {section.lessons.map((lesson, index) => {
+                {section.lessons.map((lesson) => {
                   const status = getLessonStatus(lesson);
                   
                   return (

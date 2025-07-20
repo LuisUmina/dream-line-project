@@ -14,7 +14,8 @@ export async function signUp(email: string, password: string, name: string): Pro
       options: {
         data: {
           name, // Store name in user metadata
-        }
+        },
+        emailRedirectTo: undefined // Disable email confirmation redirect
       }
     });
 
@@ -24,15 +25,30 @@ export async function signUp(email: string, password: string, name: string): Pro
       return { user: null, error: 'No se pudo crear el usuario.' };
     }
 
-    // 2. Create a profile in the profiles table
-    const newUser: User = {
-      id: data.user.id,
+    // 2. Wait a moment for the trigger to create the profile
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // 3. Fetch the created profile
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileError || !profileData) {
+      console.error('Error fetching created profile:', profileError);
+      return { user: null, error: 'Error al crear el perfil del usuario.' };
+    }
+
+    // 4. Create the user object with profile data and metadata
+    const user: User = {
+      id: profileData.id,
       email: data.user.email || '',
-      name,
-      xp: 0,
-      level: 1,
-      streak: 0,
-      lastActiveDate: new Date().toISOString(),
+      name: data.user.user_metadata?.name || name,
+      xp: profileData.xp,
+      level: profileData.level,
+      streak: profileData.streak,
+      lastActiveDate: profileData.last_active_date,
       completedLessons: [],
       badges: [
         {
@@ -43,20 +59,10 @@ export async function signUp(email: string, password: string, name: string): Pro
           earnedAt: new Date().toISOString(),
         }
       ],
-      createdAt: new Date().toISOString(),
+      createdAt: profileData.created_at,
     };
 
-    // Insert the user profile into the profiles table
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert([newUser]);
-
-    if (profileError) {
-      console.error('Error creating profile:', profileError);
-      return { user: null, error: 'Error al crear el perfil del usuario.' };
-    }
-
-    return { user: newUser, error: null };
+    return { user, error: null };
   } catch (error: any) {
     console.error('Sign up error:', error);
     return { 
@@ -99,10 +105,32 @@ export async function signIn(email: string, password: string): Promise<{
     // Update last active date
     await supabase
       .from('profiles')
-      .update({ lastActiveDate: new Date().toISOString() })
+      .update({ last_active_date: new Date().toISOString() })
       .eq('id', data.user.id);
 
-    return { user: profileData as User, error: null };
+    // Create the user object with profile data and metadata
+    const user: User = {
+      id: profileData.id,
+      email: data.user.email || '',
+      name: data.user.user_metadata?.name || profileData.name || 'Usuario',
+      xp: profileData.xp || 0,
+      level: profileData.level || 1,
+      streak: profileData.streak || 0,
+      lastActiveDate: profileData.last_active_date || new Date().toISOString(),
+      completedLessons: [], // Initialize empty array since not stored in DB yet
+      badges: [
+        {
+          id: 'welcome',
+          name: 'Bienvenido',
+          description: 'Te has unido a la plataforma',
+          icon: '👋',
+          earnedAt: profileData.created_at || new Date().toISOString(),
+        }
+      ],
+      createdAt: profileData.created_at || new Date().toISOString(),
+    };
+
+    return { user, error: null };
   } catch (error: any) {
     console.error('Sign in error:', error);
     return { 
@@ -140,6 +168,11 @@ export async function getUserProfile(userId: string): Promise<{
   error: string | null;
 }> {
   try {
+    // Get the auth user
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError) throw authError;
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -148,7 +181,29 @@ export async function getUserProfile(userId: string): Promise<{
 
     if (error) throw error;
 
-    return { user: data as User, error: null };
+    // Create the user object with profile data and metadata
+    const user: User = {
+      id: data.id,
+      email: authUser?.email || '',
+      name: authUser?.user_metadata?.name || 'Usuario',
+      xp: data.xp || 0,
+      level: data.level || 1,
+      streak: data.streak || 0,
+      lastActiveDate: data.last_active_date || new Date().toISOString(),
+      completedLessons: [], // Initialize empty array since not stored in DB yet
+      badges: [
+        {
+          id: 'welcome',
+          name: 'Bienvenido',
+          description: 'Te has unido a la plataforma',
+          icon: '👋',
+          earnedAt: data.created_at || new Date().toISOString(),
+        }
+      ],
+      createdAt: data.created_at || new Date().toISOString(),
+    };
+
+    return { user, error: null };
   } catch (error: any) {
     console.error('Get user profile error:', error);
     return { 

@@ -5,6 +5,7 @@ import { SkillTree } from './components/SkillTree';
 import { Lesson } from './components/Lesson';
 import { Quiz } from './components/Quiz';
 import { Dashboard } from './components/Dashboard';
+import { Profile } from './components/Profile';
 import { useAppContext } from './context/AppContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import { RegistrationModal } from './components/RegistrationModal';
 import { PasswordResetModal } from './components/PasswordResetModal';
 import { GeminiQuizGenerator } from './components/GeminiQuizGenerator';
 
-type ViewMode = 'home' | 'lesson' | 'quiz' | 'dashboard';
+type ViewMode = 'home' | 'lesson' | 'quiz' | 'dashboard' | 'profile';
 
 function AppContent() {
   const { state } = useAppContext();
@@ -57,6 +58,14 @@ function AppContent() {
   const handleOpenPasswordResetModal = () => {
     setPasswordResetModalOpen(true);
   };
+
+  const handleSwitchToProfile = () => {
+    setViewMode('profile');
+  };
+
+  const handleSwitchToDashboard = () => {
+    setViewMode('home');
+  };
   
   const handleClosePasswordResetModal = () => {
     setPasswordResetModalOpen(false);
@@ -72,14 +81,20 @@ function AppContent() {
     setViewMode('home');
   }
 
-  if (viewMode === 'dashboard' && !state.user) {
+  // Authentication guards for protected views
+  if ((viewMode === 'dashboard' || viewMode === 'profile') && !state.user) {
     handleOpenAuthModal();
     return null;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex flex-col">
-      <Header />
+      <Header 
+        onOpenAuthModal={handleOpenAuthModal}
+        onOpenRegistrationModal={handleOpenRegistrationModal}
+        onSwitchToProfile={handleSwitchToProfile}
+        onSwitchToDashboard={handleSwitchToDashboard}
+      />
       <main className="flex-grow container mx-auto px-4 py-4 sm:py-8">
         {viewMode === 'home' && (
           <div className="space-y-6 sm:space-y-8">
@@ -170,6 +185,10 @@ function AppContent() {
         )}
 
         {viewMode === 'quiz' && <Quiz />}
+        
+        {viewMode === 'profile' && <Profile />}
+        
+        {viewMode === 'dashboard' && <Dashboard />}
       </main>
 
       <AuthenticationModal 
@@ -177,11 +196,13 @@ function AppContent() {
         onClose={handleCloseAuthModal}
         onSwitchToRegister={handleOpenRegistrationModal}
         onForgotPassword={handleOpenPasswordResetModal}
+        onSwitchToDashboard={handleSwitchToProfile}
       />
       <RegistrationModal 
         isOpen={isRegistrationModalOpen} 
         onClose={handleCloseRegistrationModal}
         onSwitchToLogin={handleOpenAuthModal}
+        onSwitchToDashboard={handleSwitchToProfile}
       />
       <PasswordResetModal 
         isOpen={isPasswordResetModalOpen} 

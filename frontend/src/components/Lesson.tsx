@@ -34,7 +34,7 @@ export function Lesson({ lessonId, onStartQuiz, onBack }: LessonProps) {
     );
   }
 
-  const isCompleted = state.user?.completedLessons.includes(lessonId) || false;
+  const isCompleted = state.user?.completedLessons?.includes(lessonId) || false;
 
   const handleCompleteLesson = () => {
     if (!isCompleted) {

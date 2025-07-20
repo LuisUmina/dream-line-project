@@ -10,11 +10,13 @@ import { toast } from '@/hooks/use-toast';
 export function RegistrationModal({ 
   isOpen, 
   onClose, 
-  onSwitchToLogin 
+  onSwitchToLogin,
+  onSwitchToDashboard
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   onSwitchToLogin: () => void;
+  onSwitchToDashboard: () => void;
 }) {
   const { setUser } = useAppContext();
   const [formData, setFormData] = useState({
@@ -65,6 +67,7 @@ export function RegistrationModal({
         description: `Bienvenido a PanaSkill, ${user.name}`,
       });
       onClose();
+      onSwitchToDashboard(); // Redirect to dashboard
     } catch (err) {
       console.error('Registration error:', err);
       setError('Error inesperado. Inténtalo de nuevo.');
@@ -141,10 +144,17 @@ export function RegistrationModal({
           </p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="bg-white text-black border-gray-300 hover:bg-gray-50"
+          >
+            Cancelar
+          </Button>
           <Button 
             onClick={handleSubmit}
             disabled={isSubmitting}
+            className="bg-white text-black border border-gray-300 hover:bg-gray-50"
           >
             {isSubmitting ? 'Registrando...' : 'Registrarse'}
           </Button>

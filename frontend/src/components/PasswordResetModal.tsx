@@ -112,10 +112,17 @@ export function PasswordResetModal({
             </div>
             
             <DialogFooter>
-              <Button variant="outline" onClick={onClose}>Cancelar</Button>
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="bg-white text-black border-gray-300 hover:bg-gray-50"
+              >
+                Cancelar
+              </Button>
               <Button 
                 onClick={handleSubmit}
                 disabled={isSubmitting}
+                className="bg-white text-black border border-gray-300 hover:bg-gray-50"
               >
                 {isSubmitting ? 'Enviando...' : 'Enviar enlace'}
               </Button>
@@ -129,7 +136,12 @@ export function PasswordResetModal({
             </div>
             
             <DialogFooter>
-              <Button onClick={onClose}>Cerrar</Button>
+              <Button 
+                onClick={onClose}
+                className="bg-white text-black border border-gray-300 hover:bg-gray-50"
+              >
+                Cerrar
+              </Button>
             </DialogFooter>
           </>
         )}

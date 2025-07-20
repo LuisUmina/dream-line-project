@@ -1,9 +1,17 @@
-import { Trophy, Flame, Star } from 'lucide-react';
+import { Trophy, Flame, Star, User, LayoutDashboard } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
-export function Header() {
+interface HeaderProps {
+  onOpenAuthModal?: () => void;
+  onOpenRegistrationModal?: () => void;
+  onSwitchToProfile?: () => void;
+  onSwitchToDashboard?: () => void;
+}
+
+export function Header({ onOpenAuthModal, onOpenRegistrationModal, onSwitchToProfile, onSwitchToDashboard }: HeaderProps) {
   const { state } = useAppContext();
   const user = state.user;
 
@@ -45,10 +53,46 @@ export function Header() {
                   Nivel {user.level}
                 </Badge>
               </div>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={onSwitchToDashboard}
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                >
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+                
+                <Button
+                  onClick={onSwitchToProfile}
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Perfil
+                </Button>
+              </div>
             </div>
           ) : (
-            <div className="text-white">
-              <p className="text-green-100 text-xs sm:text-sm">¡Inicia sesión para comenzar!</p>
+            <div className="flex items-center space-x-3">
+              <Button
+                onClick={onOpenAuthModal}
+                variant="outline"
+                size="sm"
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+              >
+                Iniciar Sesión
+              </Button>
+              <Button
+                onClick={onOpenRegistrationModal}
+                size="sm"
+                className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
+              >
+                Registrarse
+              </Button>
             </div>
           )}
         </div>

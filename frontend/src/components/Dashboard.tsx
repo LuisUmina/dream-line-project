@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -43,7 +42,7 @@ export function Dashboard() {
           
           <div className="grid grid-cols-2 gap-2 sm:gap-4 pt-4">
             <div className="text-center">
-              <div className="text-xl sm:text-2xl font-bold text-green-600">{user.completedLessons.length}</div>
+              <div className="text-xl sm:text-2xl font-bold text-green-600">{user.completedLessons?.length || 0}</div>
               <div className="text-xs sm:text-sm text-gray-600">Lecciones completadas</div>
             </div>
             <div className="text-center">
@@ -108,12 +107,11 @@ export function Dashboard() {
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <Badge 
                     variant={entry.rank <= 3 ? "default" : "secondary"}
-                    className="text-xs"
-                    className={
+                    className={`text-xs ${
                       entry.rank === 1 ? 'bg-yellow-500' :
                       entry.rank === 2 ? 'bg-gray-400' :
                       entry.rank === 3 ? 'bg-orange-600' : ''
-                    }
+                    }`}
                   >
                     #{entry.rank}
                   </Badge>
