@@ -85,127 +85,100 @@ export async function generateQuestions(topic: string): Promise<Question[]> {
   return mockQuestions;
 }
 
-// Gemini AI question generator
+// AI Agent question generator (reemplaza Gemini)
 export async function generateQuestionsWithGemini(topic: string, content?: string): Promise<Question[]> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Obtenemos la API key de las variables de entorno
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  
-  if (!apiKey || apiKey === 'your_api_key_here') {
-    console.warn("API Key de Gemini no configurada. Usando respuestas simuladas.");
-    // Si no hay API key, usamos la simulación
-    const prompt = content 
-      ? `Genera un quiz educativo sobre ${topic} basado en el siguiente contenido: ${content}`
-      : `Genera un quiz educativo sobre ${topic}`;
+  // Validar que se haya proporcionado contenido del documento
+  if (!content) {
+    throw new Error("El documento de referencia es obligatorio para generar preguntas con IA.");
+  }
+
+  try {
+    // Paso 1: Setup del agente
+    console.log("Configurando agente con:", { topic, documentLength: content.length });
     
-    console.log("Prompt enviado a Gemini (simulación):", prompt);
-    
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateText', {
+    const setupResponse = await fetch('http://localhost:8000/api/setup-agent/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }]
+        name: topic,
+        system_prompt: `You are a helpful assistant that specializes in ${topic}`,
+        documents: [content]
       })
     });
-    const data = await response.json();
-  }
-  
-  // Mock Gemini generated questions based on topic and content
-  const geminiQuestions: Question[] = [
-    {
-      id: `gemini-${topic}-1`,
-      type: 'multiple_choice',
-      question: `¿Cuál es un principio fundamental de ${topic}?`,
-      options: [
-        'Abstracción y modelado de datos',
-        'Compilación en tiempo real',
-        'Renderizado estático',
-        'Búsqueda secuencial'
-      ],
-      correctAnswer: 'Abstracción y modelado de datos',
-      explanation: `La abstracción y el modelado de datos son principios fundamentales en ${topic} que permiten representar conceptos complejos de manera simplificada.`,
-      difficulty: 'beginner',
-      topic: topic.toLowerCase(),
-      xp: 85,
-    },
-    {
-      id: `gemini-${topic}-2`,
-      type: 'multiple_choice',
-      question: `En el contexto de ${topic}, ¿qué significa la optimización?`,
-      options: [
-        'Mejorar el rendimiento y eficiencia',
-        'Añadir más características',
-        'Aumentar el tamaño del código',
-        'Eliminar la documentación'
-      ],
-      correctAnswer: 'Mejorar el rendimiento y eficiencia',
-      explanation: `La optimización en ${topic} se refiere al proceso de mejorar el rendimiento y la eficiencia de un sistema sin comprometer su funcionalidad.`,
-      difficulty: 'intermediate',
-      topic: topic.toLowerCase(),
-      xp: 110,
-    },
-    {
-      id: `gemini-${topic}-3`,
-      type: 'code_completion',
-      question: `Completa el siguiente código relacionado con ${topic}:`,
-      options: [
-        `function implement${topic}() { /* código aquí */ }`,
-        `class ${topic}Manager { constructor() { this.data = []; } }`,
-        `const ${topic.toLowerCase()}Config = { enabled: true, mode: 'advanced' };`
-      ],
-      correctAnswer: `class ${topic}Manager { constructor() { this.data = []; } }`,
-      explanation: `Esta implementación crea una clase para manejar operaciones relacionadas con ${topic}, siguiendo las mejores prácticas de programación orientada a objetos.`,
-      difficulty: 'intermediate',
-      topic: topic.toLowerCase(),
-      xp: 120,
-    },
-    {
-      id: `gemini-${topic}-4`,
-      type: 'debugging',
-      question: `Identifica el error en este código de ${topic}:`,
-      options: [
-        'Error de sintaxis',
-        'Error lógico',
-        'Error de referencia',
-        'Error de tipo'
-      ],
-      correctAnswer: 'Error lógico',
-      explanation: `Los errores lógicos en ${topic} son especialmente complicados porque el código se ejecuta pero no produce el resultado esperado. Este tipo de errores requiere un análisis cuidadoso del flujo y la lógica del programa.`,
-      difficulty: 'advanced',
-      topic: topic.toLowerCase(),
-      xp: 150,
-    },
-    {
-      id: `gemini-${topic}-5`,
-      type: 'multiple_choice',
-      question: `¿Cuál es una ventaja clave de utilizar ${topic} en proyectos modernos?`,
-      options: [
-        'Escalabilidad y mantenibilidad',
-        'Menor necesidad de pruebas',
-        'Eliminar la necesidad de documentación',
-        'Reducir el número de desarrolladores'
-      ],
-      correctAnswer: 'Escalabilidad y mantenibilidad',
-      explanation: `La escalabilidad y mantenibilidad son ventajas clave de ${topic} en proyectos modernos, permitiendo que las aplicaciones crezcan y se adapten a nuevas necesidades sin requerir reescrituras completas.`,
-      difficulty: 'beginner',
-      topic: topic.toLowerCase(),
-      xp: 90,
-    }
-  ];
 
-  return geminiQuestions;
+    if (!setupResponse.ok) {
+      throw new Error(`Error al configurar el agente: ${setupResponse.status} ${setupResponse.statusText}`);
+    }
+
+    const setupData = await setupResponse.json();
+    console.log("Agente configurado:", setupData);
+
+    const agentId = setupData._id;
+    // const knowledgeSummary = setupData.knowledge_summary; // Guardado para uso futuro
+
+    if (!agentId) {
+      throw new Error("No se recibió un ID válido del agente.");
+    }
+
+    // Paso 2: Generar preguntas usando el agente
+    console.log("Generando preguntas con agente ID:", agentId);
+    
+    const questionsResponse = await fetch(`http://localhost:8000/api/agent/${agentId}/generate-questions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        num_questions: 5,
+        difficulty: "advanced"
+      })
+    });
+
+    if (!questionsResponse.ok) {
+      throw new Error(`Error al generar preguntas: ${questionsResponse.status} ${questionsResponse.statusText}`);
+    }
+
+    const questionsData = await questionsResponse.json();
+    console.log("Preguntas generadas por la API:", questionsData);
+
+    // Transformar las preguntas al formato esperado
+    const transformedQuestions: Question[] = questionsData.map((q: any, index: number) => {
+      const correctAnswerText = q.options[q.correctAnswer]; // Obtener el texto de la respuesta correcta usando el índice
+      console.log(`Pregunta ${index + 1}:`, {
+        originalCorrectAnswer: q.correctAnswer,
+        correctAnswerText,
+        options: q.options,
+        explanation: q.explanation
+      });
+      
+      return {
+        id: q.id,
+        type: q.type,
+        question: q.question,
+        options: q.options,
+        correctAnswer: correctAnswerText, // Usar el texto de la respuesta correcta
+        explanation: q.explanation || correctAnswerText, // Si la explicación está vacía, usar la respuesta correcta
+        difficulty: q.difficulty,
+        topic: q.topic,
+        xp: q.xp
+      };
+    });
+
+    console.log("Preguntas transformadas:", transformedQuestions);
+
+    return transformedQuestions;
+
+  } catch (error) {
+    console.error('Error conectando con la API local:', error);
+    
+    // Si hay error con la API local, mostrar mensaje específico y usar fallback
+    throw new Error(`No se pudo conectar con la API local (${error instanceof Error ? error.message : 'Error desconocido'}). Verifica que el servidor esté ejecutándose en http://localhost:8000`);
+  }
 }
 
-export async function submitAnswer(questionId: string, answer: string): Promise<{
+export async function submitAnswer(questionId: string, answer: string, correctAnswer: string): Promise<{
   isCorrect: boolean;
   feedback: string;
   xpEarned: number;
@@ -213,14 +186,16 @@ export async function submitAnswer(questionId: string, answer: string): Promise<
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Mock response
-  const isCorrect = Math.random() > 0.3; // 70% chance of being correct
+  // Validar la respuesta comparando con la respuesta correcta
+  console.log('Validando respuesta:', { questionId, answer, correctAnswer });
+  
+  const isCorrect = answer === correctAnswer;
   
   return {
     isCorrect,
     feedback: isCorrect 
       ? '¡Excelente! Tu respuesta es correcta.' 
-      : 'No es correcto. Revisa el concepto e inténtalo de nuevo.',
+      : `No es correcto. La respuesta correcta es: "${correctAnswer}". Revisa el concepto e inténtalo de nuevo.`,
     xpEarned: isCorrect ? 50 : 10,
   };
 }

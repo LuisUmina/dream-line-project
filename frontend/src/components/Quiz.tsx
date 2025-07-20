@@ -3,8 +3,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { CheckCircle, XCircle, ArrowRight, RotateCcw, Trophy } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { submitAnswer } from '../utils/api';
@@ -25,6 +23,16 @@ export function Quiz() {
   const progress = ((session.currentQuestionIndex + 1) / session.questions.length) * 100;
   const isLastQuestion = session.currentQuestionIndex === session.questions.length - 1;
 
+  const handleOptionClick = (option: string) => {
+    // Si la opción ya está seleccionada, la deseleccionamos
+    if (selectedAnswer === option) {
+      setSelectedAnswer('');
+    } else {
+      // Si no está seleccionada, la seleccionamos
+      setSelectedAnswer(option);
+    }
+  };
+
   const handleSubmitAnswer = async () => {
     if (!selectedAnswer) {
       toast({
@@ -37,7 +45,7 @@ export function Quiz() {
 
     setIsSubmitting(true);
     try {
-      const result = await submitAnswer(currentQuestion.id, selectedAnswer);
+      const result = await submitAnswer(currentQuestion.id, selectedAnswer, currentQuestion.correctAnswer);
       setFeedback(result);
       setShowFeedback(true);
       
@@ -132,19 +140,34 @@ export function Quiz() {
           {!showFeedback ? (
             <div className="space-y-4">
               {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
-                <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer} className="space-y-3">
+                <div className="space-y-3">
                   {currentQuestion.options.map((option, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-300 bg-white shadow-md hover:border-blue-500 hover:bg-blue-100 transition-colors">
-                      <RadioGroupItem value={option} id={`option-${index}`} className="h-5 w-5" />
-                      <Label 
-                        htmlFor={`option-${index}`}
-                        className="text-sm sm:text-base cursor-pointer flex-1 text-gray-700"
-                      >
+                    <div 
+                      key={index} 
+                      onClick={() => handleOptionClick(option)}
+                      className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+                        selectedAnswer === option 
+                          ? 'border-blue-500 bg-blue-50 shadow-md' 
+                          : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-25'
+                      } shadow-sm hover:shadow-md`}
+                    >
+                      <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        selectedAnswer === option 
+                          ? 'border-blue-500 bg-blue-500' 
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedAnswer === option && (
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                      <span className={`text-sm sm:text-base flex-1 transition-colors ${
+                        selectedAnswer === option ? 'text-blue-700 font-medium' : 'text-gray-700'
+                      }`}>
                         {option}
-                      </Label>
+                      </span>
                     </div>
                   ))}
-                </RadioGroup>
+                </div>
               )}
 
               {currentQuestion.type === 'code_completion' && currentQuestion.options && (
@@ -159,19 +182,34 @@ export function Quiz() {
                       </div>
                     </div>
                     <div className="bg-[#1e1e1e] p-4 text-sm sm:text-base font-mono overflow-x-auto">
-                      <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer} className="space-y-4">
+                      <div className="space-y-4">
                         {currentQuestion.options.map((option, index) => (
-                          <div key={index} className="flex items-start space-x-3">
-                            <RadioGroupItem value={option} id={`option-${index}`} className="h-5 w-5 mt-1 bg-gray-800 border-gray-600" />
-                            <Label 
-                              htmlFor={`option-${index}`}
-                              className="cursor-pointer flex-1 whitespace-pre text-[#d4d4d4] leading-relaxed"
-                            >
+                          <div 
+                            key={index} 
+                            onClick={() => handleOptionClick(option)}
+                            className={`flex items-start space-x-3 p-2 rounded cursor-pointer transition-all duration-200 ${
+                              selectedAnswer === option 
+                                ? 'bg-blue-600/20 border border-blue-400' 
+                                : 'hover:bg-gray-700/30'
+                            }`}
+                          >
+                            <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center mt-1 transition-colors ${
+                              selectedAnswer === option 
+                                ? 'border-blue-400 bg-blue-500' 
+                                : 'border-gray-500 bg-gray-800'
+                            }`}>
+                              {selectedAnswer === option && (
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                              )}
+                            </div>
+                            <span className={`cursor-pointer flex-1 whitespace-pre leading-relaxed transition-colors ${
+                              selectedAnswer === option ? 'text-blue-300' : 'text-[#d4d4d4]'
+                            }`}>
                               {option}
-                            </Label>
+                            </span>
                           </div>
                         ))}
-                      </RadioGroup>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -192,19 +230,34 @@ export function Quiz() {
                       <pre className="text-[#d4d4d4] whitespace-pre-wrap">{currentQuestion.question.split("Encuentra el error en este código:")[1]?.trim() || "// Código con error a depurar"}</pre>
                     </div>
                   </div>
-                  <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer} className="space-y-3 mt-4">
+                  <div className="space-y-3 mt-4">
                     {currentQuestion.options.map((option, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-300 bg-white shadow-md hover:border-blue-500 hover:bg-blue-100 transition-colors">
-                        <RadioGroupItem value={option} id={`option-${index}`} className="h-5 w-5" />
-                        <Label 
-                          htmlFor={`option-${index}`}
-                          className="text-sm sm:text-base cursor-pointer flex-1 text-gray-700"
-                        >
+                      <div 
+                        key={index} 
+                        onClick={() => handleOptionClick(option)}
+                        className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+                          selectedAnswer === option 
+                            ? 'border-blue-500 bg-blue-50 shadow-md' 
+                            : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-25'
+                        } shadow-sm hover:shadow-md`}
+                      >
+                        <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          selectedAnswer === option 
+                            ? 'border-blue-500 bg-blue-500' 
+                            : 'border-gray-300'
+                        }`}>
+                          {selectedAnswer === option && (
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                        <span className={`text-sm sm:text-base flex-1 transition-colors ${
+                          selectedAnswer === option ? 'text-blue-700 font-medium' : 'text-gray-700'
+                        }`}>
                           {option}
-                        </Label>
+                        </span>
                       </div>
                     ))}
-                  </RadioGroup>
+                  </div>
                 </div>
               )}
 
