@@ -101,10 +101,10 @@ function AppContent() {
             {/* Hero Section */}
             <div className="text-center space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent px-4">
-                ¡Aprende Programación de Forma Divertida!
+                ¡Aprende Cualquier Tema de Forma Divertida!
               </h1>
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-                Domina los fundamentos de la programación con lecciones interactivas y quizzes generados por IA
+                Domina los fundamentos de cualquier tema que te guste con lecciones interactivas y quizzes generados por IA
               </p>
             </div>
 
@@ -135,7 +135,7 @@ function AppContent() {
                     Generador de Quiz con Inteligencia Artificial
                   </h2>
                   <p className="text-sm sm:text-base text-gray-600">
-                    Escribe cualquier tema de programación y nuestra IA creará un quiz personalizado
+                    Escribe cualquier tema interesante, sube un archivo y nuestra IA creará un quiz personalizado
                   </p>
                 </div>
                 <GeminiQuizGenerator />
